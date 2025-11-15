@@ -1,9 +1,10 @@
 import "./App.css";
+import Chat from "./pages/chat";
 
 function App() {
     return (
         <>
-            <span>Hello From React app</span>
+            <Chat />
         </>
     );
 }
