@@ -17,6 +17,7 @@ export default function Chat() {
     const submitHandler = async (e) => {
         e.preventDefault();
         if (!input) return;
+        setMessages((prevMessages) => [...prevMessages, input]);
         setInput("");
         inputRef.current.value = "";
         setLoading(true);
@@ -27,10 +28,17 @@ export default function Chat() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: input }),
             });
-            setMessages((prevMessages) => [...prevMessages, input]);
+            const data = await response.json();
+            console.log("Response from server:", data);
+            if (data.success) {
+                setMessages((prevMessages) => [...prevMessages, data.msg]);
+            } else {
+                messages[messages.length - 1] += "Error: " + data.msg + "\n";
+            }
         } catch (error) {
             console.error("Error:", error);
         }
+        setLoading(false);
     };
     const changeHandler = (e) => {
         setInput(e.target.value);
@@ -69,7 +77,9 @@ export default function Chat() {
                                 onChange={changeHandler}
                                 ref={inputRef}
                             />
-                            <button type="submit">Send</button>
+                            <button type="submit" disabled={loading}>
+                                {loading ? "Wait..." : "Send"}
+                            </button>
                         </form>
                     </div>
                 </div>
