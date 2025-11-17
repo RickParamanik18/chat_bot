@@ -1,6 +1,15 @@
+:root {
+    --charcoal: #282727;
+    --smoke: #e3e1e1;
+    --earthen: #171614;
+}
 * {
     margin: 0px;
     padding: 0px;
     box-sizing: border-box;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--smoke);
+}
+body {
+    background-color: var(--earthen);
 }

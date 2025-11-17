@@ -1,7 +1,5 @@
-import { use, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import "./chat.css";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import Markdown from "react-markdown";
 
 export default function Chat() {
@@ -9,6 +7,7 @@ export default function Chat() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const inputRef = useRef(null);
+    const chatsRef = useRef(null);
 
     const submitHandler = async (e) => {
         e.preventDefault();
@@ -89,7 +88,11 @@ export default function Chat() {
         setInput(e.target.value);
     };
 
-    // console.log(messages.length);
+    useEffect(() => {
+        if (chatsRef.current) {
+            chatsRef.current.scrollTop = chatsRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     return (
         <>
@@ -109,10 +112,17 @@ export default function Chat() {
                         <h2>TestGPT</h2>
                         <div>UN</div>
                     </div>
-                    <div className="chats">
+                    <div className="chats" ref={chatsRef}>
                         {messages.length ? (
                             messages.map((msg, index) => (
-                                <div key={index} className="message">
+                                <div
+                                    key={index}
+                                    className={
+                                        index % 2
+                                            ? "ai_message"
+                                            : "human_message"
+                                    }
+                                >
                                     <div style={{ whiteSpace: "pre-wrap" }}>
                                         <Markdown>{msg}</Markdown>
                                     </div>
@@ -128,7 +138,7 @@ export default function Chat() {
                         <form onSubmit={submitHandler}>
                             <input
                                 type="text"
-                                placeholder="Enter Your Text Here.."
+                                placeholder="Ask me anything..."
                                 onChange={changeHandler}
                                 ref={inputRef}
                             />
