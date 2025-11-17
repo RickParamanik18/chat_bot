@@ -11,34 +11,46 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.post("/query", async (req: Request, res: Response, next: NextFunction) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Transfer-Encoding", "chunked");
     const clientMsg = req.body.message;
 
     if (!clientMsg) {
-        return res
-            .status(400)
-            .json({ success: false, msg: "Message is required" });
+        res.write(
+            `event: error\ndata: ${JSON.stringify({
+                error: "Message is required",
+            })}\n\n`
+        );
+        return res.end();
     }
     const initMsg = new HumanMessage({ content: clientMsg });
-    agent
-        .invoke({ messages: [initMsg] }, { configurable: { thread_id: "1" } })
-        .then((result) => {
-            console.log("Final messages:", result.messages);
-            const aiResponseString =
-                result.messages[result.messages.length - 1].content;
-            // checkPointer
-            //     .get({ configurable: { thread_id: "1" } })
-            //     .then((state) => {
-            //         console.log("Saved state:", state);
-            //     });
+    try {
+        const stream = await agent.stream(
+            { messages: [initMsg] },
+            { streamMode: "messages", configurable: { thread_id: "1" } }
+        );
 
-            return res
-                .status(200)
-                .json({ success: true, msg: aiResponseString });
-        })
-        .catch((error) => {
-            console.error("Error during agent invocation:", error);
-            return res.status(500).json({ success: false, msg: "LLM err" });
-        });
+        for await (const chunk of stream) {
+            const [msg, metadata] = chunk;
+            if (!metadata.name) continue;
+            if (msg.content) {
+                console.log("Chunk\n", msg.content);
+                res.write(
+                    `data: ${JSON.stringify({ message: msg.content })}\n\n`
+                );
+            }
+        }
+        res.end();
+    } catch (error) {
+        res.write(
+            `event: error\ndata: ${JSON.stringify({
+                error: "LLM error occurred",
+            })}\n\n`
+        );
+        res.end();
+    }
 });
 
 const port = process.env.PORT || 3000;
@@ -62,6 +74,7 @@ const llm = new ChatGoogleGenerativeAI({
     model: "gemini-2.5-flash",
     temperature: 0,
     maxRetries: 2,
+    streaming: true,
 });
 
 const ChatState = Annotation.Root({

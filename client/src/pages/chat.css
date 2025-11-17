@@ -32,18 +32,26 @@
 }
 .chats .message {
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 10px 25px;
     border-radius: 5px;
     background-color: #f1f1f1;
 }
 .interactive_chat .chats {
-    padding: 10px;
+    padding: 20px;
     height: 79vh;
     overflow-y: scroll;
 }
 .interactive_chat .input_area {
     padding: 0px 10px;
     border-top: 1px solid #ccc;
+}
+.welcome_msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 100px;
 }
 .input_area {
     height: 60px;
