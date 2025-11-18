@@ -7,11 +7,44 @@
     border: 1px solid black;
     display: flex;
     flex-direction: column;
+    padding: 25px 10px;
 }
-.history a {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
+.history span {
+    font-weight: 500;
+    margin: 30px 5px 10px 5px;
+    padding: 5px;
+    border-bottom: 1px solid var(--smoke);
+}
+.history .past_conv {
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+    overflow-y: scroll;
+}
+.history .past_conv a {
+    padding: 10px 10px;
+    margin: 5px;
+    font-size: 16px;
+    background-color: var(--charcoal);
+    border: 0px;
+    border-radius: 10px;
+    cursor: pointer;
     text-decoration: none;
+    transition: background-color 0.5s ease;
+}
+.history .new_chat button {
+    height: 50px;
+    padding: 0 10px;
+    font-size: 16px;
+    background-color: var(--charcoal);
+    border: 0px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.5s ease;
+}
+.history .new_chat {
+    display: flex;
+    justify-content: center;
 }
 .header {
     height: 60px;
@@ -110,4 +143,13 @@
     background-color: var(--charcoal);
     border: 0px;
     border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.5s ease;
+}
+
+.input_area button:hover,
+.history .new_chat button:hover,
+.history .past_conv a:hover {
+    background-color: var(--smoke);
+    color: var(--charcoal);
 }

@@ -31,7 +31,7 @@ export default function Chat() {
             const response = await fetch("http://localhost:3000/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput }),
+                body: JSON.stringify({ message: userInput, thread_id: "1" }),
             });
 
             if (!response.body) {
@@ -98,14 +98,18 @@ export default function Chat() {
         <>
             <div className="chat_container">
                 <div className="history">
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
-                    <a href="">hello user</a>
+                    <div className="new_chat">
+                        <button>New Chat</button>
+                    </div>
+                    <span>History</span>
+                    <div className="past_conv">
+                        <a href="">hello user</a>
+                        <a href="">hello user</a>
+                        <a href="">hello user</a>
+                        <a href="">hello user</a>
+                        <a href="">hello user</a>
+                        <a href="">hello user</a>
+                    </div>
                 </div>
                 <div className="interactive_chat">
                     <div className="header">

@@ -16,6 +16,7 @@ app.post("/query", async (req: Request, res: Response, next: NextFunction) => {
     res.setHeader("Connection", "keep-alive");
     res.setHeader("Transfer-Encoding", "chunked");
     const clientMsg = req.body.message;
+    const thread_id = req.body.thread_id;
 
     if (!clientMsg) {
         res.write(
@@ -29,7 +30,7 @@ app.post("/query", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const stream = await agent.stream(
             { messages: [initMsg] },
-            { streamMode: "messages", configurable: { thread_id: "1" } }
+            { streamMode: "messages", configurable: { thread_id } }
         );
 
         for await (const chunk of stream) {
