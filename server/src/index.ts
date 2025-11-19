@@ -35,9 +35,16 @@ app.post("/query", async (req: Request, res: Response, next: NextFunction) => {
 
         for await (const chunk of stream) {
             const [msg, metadata] = chunk;
-            if (!metadata.name) continue;
-            if (msg.content) {
-                console.log("Chunk\n", msg.content);
+            // if (!metadata.name) continue;
+            // console.log("CHUNK:");
+            // console.log(chunk);
+            if (
+                msg.content &&
+                msg instanceof AIMessage &&
+                msg.tool_calls instanceof Array &&
+                !msg.tool_calls.length
+            ) {
+                console.log(msg.content);
                 res.write(
                     `data: ${JSON.stringify({ message: msg.content })}\n\n`
                 );
@@ -69,6 +76,8 @@ import {
     MemorySaver,
     Annotation,
 } from "@langchain/langgraph";
+import { tool } from "@langchain/core/tools";
+import { ToolMessage } from "@langchain/core/messages";
 const checkPointer = new MemorySaver();
 
 const llm = new ChatGoogleGenerativeAI({
@@ -78,23 +87,78 @@ const llm = new ChatGoogleGenerativeAI({
     streaming: true,
 });
 
+//Tools
+const add = tool(({ a, b }) => a + b, {
+    name: "add",
+    description: "Add two numbers",
+    schema: z.object({
+        a: z.number().describe("First number"),
+        b: z.number().describe("Second number"),
+    }),
+});
+
+const toolsByName = {
+    [add.name]: add,
+};
+
+const tools = Object.values(toolsByName);
+const llm_with_tools = llm.bindTools(tools);
+
+//State
 const ChatState = Annotation.Root({
     messages: Annotation<BaseMessage[]>({
         reducer: (x, y) => x.concat(y),
     }),
 });
 
+//Nodes
 const chatNode = async (state: any) => {
     const messages = state.messages;
-    const response = await llm.invoke(messages);
+    const response = await llm_with_tools.invoke(messages);
+
     return {
-        messages: [new AIMessage({ content: response.content })],
+        messages: [
+            new AIMessage({
+                content: response.content,
+                tool_calls: response.tool_calls,
+            }),
+        ],
     };
 };
+
+async function toolNode(state: any) {
+    const lastMessage = state.messages.at(-1);
+
+    if (lastMessage == null || !(lastMessage instanceof AIMessage)) {
+        return { messages: [] };
+    }
+
+    const result: ToolMessage[] = [];
+    for (const toolCall of lastMessage.tool_calls ?? []) {
+        const tool = toolsByName[toolCall.name];
+        const observation = await tool.invoke(toolCall);
+        result.push(observation);
+    }
+
+    return { messages: result };
+}
+
+async function shouldContinue(state: any) {
+    const lastMessage = state.messages.at(-1);
+    if (lastMessage == null || !(lastMessage instanceof AIMessage)) return END;
+    if (lastMessage.tool_calls?.length) {
+        return "toolNode";
+    }
+    return END;
+}
+
+//Graph
 const agent = new StateGraph(ChatState)
     .addNode("chatNode", chatNode)
+    .addNode("toolNode", toolNode)
     .addEdge(START, "chatNode")
-    .addEdge("chatNode", END)
+    .addConditionalEdges("chatNode", shouldContinue, ["toolNode", END])
+    .addEdge("toolNode", "chatNode")
     .compile({ checkpointer: checkPointer });
 
 const initMsg = new HumanMessage({ content: "Hello, how are you?" });
