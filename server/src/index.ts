@@ -78,6 +78,7 @@ import {
 } from "@langchain/langgraph";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
+import { TavilySearch } from "@langchain/tavily";
 const checkPointer = new MemorySaver();
 
 const llm = new ChatGoogleGenerativeAI({
@@ -88,6 +89,19 @@ const llm = new ChatGoogleGenerativeAI({
 });
 
 //Tools
+const tavilySearchTool = new TavilySearch({
+    maxResults: 5,
+    verbose: true,
+});
+
+// app.get("/test", async (req, res) => {
+//     const results = await tavilySearchTool.invoke({
+//         query: "current weather in india",
+//     });
+//     console.log("Tavily Search", results);
+//     res.send({ results });
+// });
+
 const add = tool(({ a, b }) => a + b, {
     name: "add",
     description: "Add two numbers",
@@ -98,7 +112,7 @@ const add = tool(({ a, b }) => a + b, {
 });
 
 const toolsByName = {
-    [add.name]: add,
+    [tavilySearchTool.name]: tavilySearchTool,
 };
 
 const tools = Object.values(toolsByName);
@@ -136,7 +150,7 @@ async function toolNode(state: any) {
     const result: ToolMessage[] = [];
     for (const toolCall of lastMessage.tool_calls ?? []) {
         const tool = toolsByName[toolCall.name];
-        const observation = await tool.invoke(toolCall);
+        const observation = await (tool as any).invoke(toolCall);
         result.push(observation);
     }
 
