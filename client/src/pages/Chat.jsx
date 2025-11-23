@@ -28,11 +28,17 @@ export default function Chat() {
         let streamStarted = false;
 
         try {
-            const response = await fetch("http://localhost:3000/query", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userInput, thread_id: "1" }),
-            });
+            const response = await fetch(
+                "https://chat-bot-server-six.vercel.app/query",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: userInput,
+                        thread_id: "1",
+                    }),
+                }
+            );
 
             if (!response.body) {
                 throw Error("Stream body is empty");
